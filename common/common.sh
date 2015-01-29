@@ -2,8 +2,6 @@
 
 export LANGUAGE="utf-8"
 #export LANGUAGE="gbk"
-
-this_file=`pwd`"/"$0
 PROJECT=$1
 shift 1
 

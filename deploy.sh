@@ -11,9 +11,10 @@ fi
 #############################################################################
 #   配置项
 #   include lib
-DEPLOY_TOOLS_DIR=`dirname $this_file`
-. $DEPLOY_TOOLS_DIR/common/utils.sh
-. $DEPLOY_TOOLS_DIR/common/common.sh
+this_file=`pwd`"/"$0
+DEPLOY_TOOLS_DIR=`dirname $this_file`"/"
+. ${DEPLOY_TOOLS_DIR}common/utils.sh
+. ${DEPLOY_TOOLS_DIR}common/common.sh
 
 # 获取配置文件
 if [ ! -f "./conf/conf.${PROJECT}.sh" ]
@@ -83,8 +84,8 @@ done
 # 源文件打包
 cecho "\n=== 上线文件打包 === \n" $c_notify
 cd ${PROJECT_TAG}
-rm -f $DEPLOY_TOOLS_DIR${PROJECT}.zip
-zip -r $DEPLOY_TOOLS_DIR${PROJECT}.zip ./ > /dev/null
+rm -f ${DEPLOY_TOOLS_DIR}${PROJECT}.zip
+zip -r ${DEPLOY_TOOLS_DIR}${PROJECT}.zip ./ > /dev/null
 cd -
 #############################################################################
 # 打包文件传输
@@ -93,19 +94,17 @@ for host in $ONLINE_HOSTS
 do
     scp ${DEPLOY_TOOLS_DIR}${PROJECT}.zip $SSH_USER@$host:$PUBLIC_DIR
     cecho "传输到$host成功" $c_notify
-    ssh $SSH_USER@$host "cd $PUBLIC_DIR;unzip ${DEPLOY_TOOLS_DIR}${PROJECT}.zip;"
+    ssh $SSH_USER@$host "cd $PUBLIC_DIR;unzip ${PROJECT}.zip -d ${PROJECT}"
     cecho "解压${PROJECT}.zip完成" $c_notify
 done
 #############################################################################
 # 建立软连，执行命令
-deploy_confirm "确认变更上线？"
-if [ 1 != $? ]; then
-    exit 1;
-fi
+cecho "\n=== 服务开始变更 === \n" $c_notify
 for host in $ONLINE_HOSTS
 do
-    ssh $SSH_USER@$host "cd $PUBLIC_DIR;ln -T -s $PROJECT $HTDOCS_NAME;"
+    ssh $SSH_USER@$host "cd $PUBLIC_DIR;ln -T -s $PROJECT $PUBLIC_NAME;$CMD;"
 done
 #############################################################################
 # 发布成功写入记录
 `echo "$CURRENT_REVISION" > ${LOG_DIR}${PROJECT}.log`
+cecho "\n=== 上线结束 === \n" $c_notify
